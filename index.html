@@ -1088,11 +1088,11 @@
     email: 'rafael@intelbex.com',
     website: 'https://www.intelbex.com',
     street: '',
-    city: 'San Juan',
+    city: 'Guayanbo',
     region: 'PR',
-    postal: '',
+    postal: '00966-7941',
     country: 'Puerto Rico',
-    linkedinPersonal: '',
+    linkedinPersonal: 'https://pr.linkedin.com/in/rafael-s%C3%A1nchez-torres-919bb9222',
     linkedinCompany: 'https://www.linkedin.com/company/intelbex/',
     photoDataUrl: '',
     logoDataUrl: ''
@@ -1743,9 +1743,25 @@
 
   // ========= INIT =========
   loadData();
-  isUnlocked = isSessionUnlocked();
-  render();
-  updateLockState();
+  // Try to fetch public defaults (photo/logo/data baked into card-data.json)
+  // This makes the card complete for ALL visitors, not just the owner's browser
+  loadPublicDefaults().then(() => {
+    isUnlocked = isSessionUnlocked();
+    render();
+    updateLockState();
+  });
+
+  async function loadPublicDefaults() {
+    // Only fetch if there's no user data yet in this browser (first visit)
+    try {
+      const hasUserEdits = localStorage.getItem(STORAGE_KEY);
+      if (hasUserEdits) return; // Respect user's own edits
+      const res = await fetch('./card-data.json', { cache: 'no-cache' });
+      if (!res.ok) return;
+      const publicData = await res.json();
+      data = { ...DEFAULT_DATA, ...publicData };
+    } catch (e) { /* file may not exist yet; use defaults */ }
+  }
 
   // Triple-tap on photo to reset PIN (recovery path)
   document.getElementById('photo-display').addEventListener('click', handlePhotoTap);
